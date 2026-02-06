@@ -1,0 +1,5 @@
+ENTITY 1 : User
+Attributes: - ID, first_name, last_name, category, created _at.
+
+ENTITY 2 : Contact
+Attributes: - ID, fullname, phone, email, added_by
