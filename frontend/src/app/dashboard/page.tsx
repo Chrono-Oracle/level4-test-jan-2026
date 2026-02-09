@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
-import type { Contact } from "@/types";
+import type { Contact, User } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [isNewContactOpen, setIsNewContactOpen] = useState(false);
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
@@ -35,19 +36,32 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    const loadContacts = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const data = await api.getContacts();
-        setContacts(data);
+        const [contactsData, usersData] = await Promise.all([
+          api.getContacts(),
+          api.getUsers(), // Ensure this API method exists
+        ]);
+        setContacts(contactsData);
+        setUsers(usersData);
       } catch (err: any) {
-        setError(err.message ?? "Failed to load contacts");
+        setError(err.message ?? "Failed to load data");
       } finally {
         setLoading(false);
       }
     };
-    loadContacts();
+    loadData();
   }, []);
+
+  const formatPhoneNumber = (phone: string | number) => {
+    const s = String(phone).replace(/\D/g, "");
+    // Assuming the raw string is something like "237687456814"
+    if (s.length === 12 && s.startsWith("237")) {
+      return `+237 ${s.slice(3, 4)} ${s.slice(4, 6)} ${s.slice(6, 8)} ${s.slice(8, 10)} ${s.slice(10, 12)}`;
+    }
+    return String(phone); // Fallback if format is unexpected
+  };
 
   const handleContactCreated = (contact: Contact) => {
     setContacts((prev) => [contact, ...prev]);

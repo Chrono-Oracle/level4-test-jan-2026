@@ -25,7 +25,7 @@ const contactValidation = ( req, res, next ) => {
 
     const schema = z.object({
         fullname: z.string().min(5),
-        phone: z.number().positive(),
+        phone: z.string().min(9),
         email: z.email()
     })
 

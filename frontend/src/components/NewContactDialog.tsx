@@ -3,8 +3,11 @@ import { CustomDialog } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { motion } from "framer-motion"; // ← ADD THIS!
-import { useState } from "react";
-import { User, Mail, Phone } from "lucide-react";
+import { useState, useEffect } from "react";
+import { UserRound, Mail, Phone } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import type { Contact, User } from "@/types";
 
 function Select({
   children,
@@ -65,32 +68,93 @@ export function NewContactDialog({
 }) {
   const [formData, setFormData] = useState({
     fullName: "",
-    phone: "",
+    phone: "+237 ",
     email: "",
     addedBy: "",
   });
+
+  const formatPhoneNumber = (value: string) => {
+    // Remove everything except numbers
+    const nums = value.replace(/\D/g, "");
+
+    // Extract only the numbers after the country code (237)
+    // If the user typed 237 again, we skip it
+    let coreNumbers = nums.startsWith("237") ? nums.slice(3) : nums;
+
+    coreNumbers = coreNumbers.slice(0, 9);
+
+    //Apply the "6 91 45 02 11" pattern
+    const parts = [];
+    if (coreNumbers.length > 0) parts.push(coreNumbers.slice(0, 1)); // 6
+    if (coreNumbers.length > 1) parts.push(coreNumbers.slice(1, 3)); // 91
+    if (coreNumbers.length > 3) parts.push(coreNumbers.slice(3, 5)); // 45
+    if (coreNumbers.length > 5) parts.push(coreNumbers.slice(5, 7)); // 02
+    if (coreNumbers.length > 7) parts.push(coreNumbers.slice(7, 9)); // 11
+
+    return `+237 ${parts.join(" ")}`.trim();
+  };
+
+  const [dbUsers, setDbUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      const loadUsers = async () => {
+        try {
+          setLoadingUsers(true);
+          const data = await api.getUsers();
+          setDbUsers(data);
+        } catch (err) {
+          console.error("Failed to load users:", err);
+        } finally {
+          setLoadingUsers(false);
+        }
+      };
+      loadUsers();
+    }
+  }, [open]);
 
   const isFormValid =
     formData.fullName.trim() !== "" &&
     formData.phone.trim() !== "" &&
     formData.addedBy.trim() !== "";
 
-  // Mock users
-  const users = [
-    { id: 1, name: "Admin User", category: "Admin" },
-    { id: 2, name: "Daniel Oracle", category: "Teacher" },
-  ];
+  const getArticle = (word: string) => {
+    const vowels = ["A", "E", "I", "O", "U"];
+    return vowels.includes(word.charAt(0).toUpperCase()) ? "an" : "a";
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (contact) {
-      const updatedContact: Contact = {
-        ...contact,
-        fullname: formData.fullName, // Use 'fullname' instead of 'name'
-        phone: Number(formData.phone), // The global type expects a number
-      };
-      onSave(updatedContact);
+    try {
+      const rawPhoneNumber = formData.phone.replace(/\D/g, "");
+
+      const response = await api.createContact({
+        fullname: formData.fullName,
+        phone: rawPhoneNumber,
+        email: formData.email,
+        addedBy: formData.addedBy,
+      });
+
+      // Success Popup with Detail
+      const selectedUser = dbUsers.find(
+        (u) => `${u.first_name} ${u.last_name}` === formData.addedBy,
+      );
+      const category = selectedUser?.category || "User";
+
+      toast.success("Contact created!", {
+        description: `${formData.fullName} was successfully added by ${formData.addedBy} (${getArticle(category)} ${category}).`,
+      });
+
+      onCreated(response);
       onOpenChange(false);
+      setFormData({ fullName: "", phone: "", email: "", addedBy: "" });
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      toast.error("Failed to create contact", {
+        description: errorMessage,
+      });
     }
   };
 
@@ -107,7 +171,7 @@ export function NewContactDialog({
             <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
               {" "}
               {/* ← flex not block */}
-              <User className="h-4 w-4" />
+              <UserRound className="h-4 w-4" />
               Full Name *
             </label>
             <Input
@@ -126,11 +190,17 @@ export function NewContactDialog({
                 Phone *
               </label>
               <Input
-                placeholder="+237 699 123 456"
+                placeholder="+237 6 91 45 02 11"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
+                onChange={(e) => {
+                  const formatted = formatPhoneNumber(e.target.value);
+                  setFormData({ ...formData, phone: formatted });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Backspace" && formData.phone.length <= 5) {
+                    e.preventDefault();
+                  }
+                }}
               />
             </div>
 
@@ -155,27 +225,41 @@ export function NewContactDialog({
               Added By *
             </label>
             <Select
+              className="cursor-pointer"
               value={formData.addedBy}
-              onValueChange={(value: string) =>
-                setFormData({ ...formData, addedBy: value })
+              onValueChange={(val) =>
+                setFormData({ ...formData, addedBy: val })
               }
             >
-              {users.map((user) => (
-                <button
-                  key={user.id}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, addedBy: user.name })
-                  } // ← FIXED: direct call
-                  className="w-full px-4 py-3 text-left hover:bg-white/10 rounded-xl text-white flex items-center gap-3 transition-all"
-                >
-                  <span className="w-2 h-2 bg-indigo-400 rounded-full" />
-                  <span>{user.name}</span>
-                  <span className="text-xs text-slate-400 ml-auto">
-                    ({user.category})
-                  </span>
-                </button>
-              ))}
+              {loadingUsers ? (
+                <div className="p-4 text-slate-400 text-sm animate-pulse">
+                  Loading users...
+                </div>
+              ) : dbUsers.length === 0 ? (
+                <div className="p-4 text-slate-400 text-sm">
+                  No users found in database
+                </div>
+              ) : (
+                dbUsers.map((user) => {
+                  const fullName = `${user.first_name} ${user.last_name}`;
+                  return (
+                    <button
+                      key={user._id}
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, addedBy: fullName })
+                      }
+                      className="w-full px-4 py-3 text-left cursor-pointer hover:bg-green-500/20 rounded-xl text-white flex items-center gap-3 transition-all"
+                    >
+                      <span className="w-2 h-2 bg-green-400 rounded-full" />
+                      <span>{fullName}</span>
+                      <span className="text-xs text-slate-400 ml-auto bg-white/5 px-2 py-1 rounded-md">
+                        {user.category}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
             </Select>
           </div>
         </div>
@@ -193,7 +277,7 @@ export function NewContactDialog({
             className={`flex-1 py-2 ${
               !isFormValid
                 ? "text-white/30 cursor-not-allowed bg-black/30"
-                : "text-white bg-green-500"
+                : "text-white bg-green-500 cursor-pointer"
             }`}
             disabled={!isFormValid}
           >

@@ -8,7 +8,7 @@ const contactSchema  = new Schema({
         min: [5, "Enter your full name"],
     },
     phone: {
-        type: Number,
+        type: String,
         required: true,
     },
     email: {

@@ -18,6 +18,8 @@ mongoose.connect(process.env.DATABASE_URL)
 
         //Create a User
         app.post('/users/create', userValidation, authController.create);
+        //Fetch Users
+        app.get('/users', authController.getUsers);
 
         //Add a Contact
         app.post('/contacts/add', contactValidation, authController.add);

@@ -10,7 +10,7 @@ export type User = {
 export type Contact = {
   _id: string;
   fullname: string;
-  phone: number;
+  phone: string;
   email: string;
   addedBy: string;
   createdAt?: string;

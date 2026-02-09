@@ -27,11 +27,13 @@ async function request<T>(
 export const api = {
   // Contact Methods
   getContacts: () => request<Contact[]>('/contacts'),
-  
+  getUsers: () => request<User[]>('/users'),
+
   createContact: (body: {
     fullname: string;
-    phone: number;
+    phone: string;
     email: string;
+    addedBy: string;
   }) => request<Contact>('/contacts/add', {
     method: 'POST',
     body: JSON.stringify(body),
@@ -46,11 +48,11 @@ export const api = {
   deleteContact: (id: string) =>
     request<void>(`/contacts/remove/${id}`, { method: 'DELETE' }),
 
-  
+
   // User Methods
-  createUser: (body: { 
-    first_name: string; 
-    last_name: string; 
+  createUser: (body: {
+    first_name: string;
+    last_name: string;
     category: string
   }) =>
     request<User>('/users/create', {

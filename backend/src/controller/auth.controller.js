@@ -39,21 +39,18 @@ const create = async (req, res) => {
 const add = async (req, res) => {
   try {
     const data = req.body;
-    // const fullname = data.fullname.toLowerCase();
+    const formattedFullname = formatName(data.fullname);
     const phone = data.phone;
     const email = data.email;
-    const find = await Contact.findOne({ phone, email });
+    const find = await Contact.findOne({ $or: [{ phone }, { email }, { fullname: formattedFullname }]});
     if (find) {
       return res.status(404).json({
         message: "Contact already exists",
       });
     }
 
-    await Contact.create({ ...data, phone, email });
-
-    return res.status(201).json({
-      message: "Contact created successfully",
-    });
+    const newContact = await Contact.create({ ...data, fullname: formattedFullname phone, email });
+    return res.status(201).json(newContact);
   } catch (err) {
     console.log("Error creating contact:", err);
     return res.status(500).json({
@@ -109,4 +106,13 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { create, add, read, update, remove };
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { create, add, read, update, remove, getUsers };
