@@ -32,13 +32,12 @@ export function DeleteConfirmDialog({
         </p>
 
         <div className="flex gap-4">
-          <Button type="button" variant="secondary" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button type="button" className="flex-1 py-2 hover:bg-green-500 hover:text-white cursor-pointer" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button 
             type="button" 
-            variant="destructive" 
-            className="flex-1 group hover:brightness-110"
+            className="flex-1 cursor-pointer text-white hover:bg-red-500 py-2"
             onClick={onConfirm}
           >
             <Trash2 className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />

@@ -19,6 +19,7 @@ import { NewUserDialog } from "@/components/NewUserDialog";
 import { EditContactDialog } from "@/components/EditContactDialog";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -41,12 +42,16 @@ export default function Dashboard() {
         setLoading(true);
         const [contactsData, usersData] = await Promise.all([
           api.getContacts(),
-          api.getUsers(), // Ensure this API method exists
+          api.getUsers(),
         ]);
         setContacts(contactsData);
         setUsers(usersData);
-      } catch (err: any) {
-        setError(err.message ?? "Failed to load data");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unexpected error occurred");
+        }
       } finally {
         setLoading(false);
       }
@@ -54,12 +59,12 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  const getUserCategory = (userName: string) => {
-    const user = users.find(
-      (u) => `${u.first_name} ${u.last_name}` === userName,
-    );
-    return user?.category || userName; // Fallback to name if not found
-  };
+  // const getUserCategory = (userName: string) => {
+  //   const user = users.find(
+  //     (u) => `${u.first_name} ${u.last_name}` === userName,
+  //   );
+  //   return user?.category || userName;
+  // };
 
   const formatPhoneNumber = (phone: string | number) => {
     const s = String(phone).replace(/\D/g, "");
@@ -86,24 +91,47 @@ export default function Dashboard() {
         fullname: updatedContact.fullname,
         phone: updatedContact.phone,
         email: updatedContact.email,
+        addedBy: updatedContact.addedBy,
       });
+
+      // Now 'saved' is the full Contact object from the backend
       setContacts((prev) => prev.map((c) => (c._id === saved._id ? saved : c)));
-    } catch (err: any) {
+
+      setIsEditContactOpen(false);
+      toast.success("Contact updated successfully!");
+    } catch (err: unknown) {
       console.error("Update failed:", err);
+      const message = err instanceof Error ? err.message : "Update failed";
+      toast.error(message);
     }
-    setIsEditContactOpen(false);
   };
 
   const handleDelete = async () => {
     if (!deletingContactId) return;
+
+    // Find the contact name before deleting so we can show it in the toast
+    const contactToDelete = contacts.find((c) => c._id === deletingContactId);
+    const contactName = contactToDelete?.fullname || "Contact";
+
     try {
       await api.deleteContact(deletingContactId);
+
       setContacts((prev) => prev.filter((c) => c._id !== deletingContactId));
-    } catch (err: any) {
+      toast.success("Contact deleted", {
+        description: `${contactName} has been removed from your database.`,
+      });
+    } catch (err: unknown) {
       console.error("Delete failed:", err);
+
+      const errorMessage =
+        err instanceof Error ? err.message : "Could not delete contact";
+      toast.error("Failed to delete contact", {
+        description: errorMessage,
+      });
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setDeletingContactId(null);
     }
-    setIsDeleteConfirmOpen(false);
-    setDeletingContactId(null);
   };
 
   if (loading) {
@@ -201,7 +229,7 @@ export default function Dashboard() {
                   <th className="text-left py-4 font-semibold ">Phone</th>
                   <th className="text-left py-4 font-semibold">Email</th>
                   <th className="text-left py-4 font-semibold ">Added By</th>
-                  <th className="py-4 font-semibold w-10">Actions</th>
+                  <th className="py-4  font-semibold w-10">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,16 +258,16 @@ export default function Dashboard() {
                         )?.category || contact.addedBy}
                       </span>
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 pr-5">
                       <div className="flex items-center gap-2">
                         <Button
-                          className="h-10 w-10 p-0"
-                          onClick={() => handleEditSave(contact)}
+                          className="h-10 w-10 p-0 hover:bg-green-500 hover:text-white cursor-pointer transition-all ease-in-out duration-300"
+                          onClick={() => handleEdit(contact)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          className="h-10 w-10 p-0"
+                          className="h-10 w-10 p-0 hover:bg-red-500 cursor-pointer hover:text-white"
                           onClick={() => {
                             setDeletingContactId(contact._id);
                             setIsDeleteConfirmOpen(true);
