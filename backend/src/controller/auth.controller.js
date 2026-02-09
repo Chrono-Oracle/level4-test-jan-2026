@@ -61,15 +61,9 @@ const add = async (req, res) => {
 const read = async (req, res) => {
     try {
         const contacts = await Contact.find();
-        return res.json({
-            message: "Contacts retrieved successfully !!!",
-            data: contacts
-        })
-    } catch (err) {
-        console.log("Error retrieving contacts:", err)
-        return res.status(500).json({
-            message: "Internal server error encountered while retrieving contacts"
-        })
+        res.status(200).json(contacts); // Change this line
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
 

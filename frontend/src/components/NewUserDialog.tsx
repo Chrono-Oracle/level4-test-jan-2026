@@ -64,7 +64,7 @@ export function NewUserDialog({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    category: "",
+    category: "Student",
   });
 
   const isFormValid =
@@ -72,16 +72,16 @@ export function NewUserDialog({
     formData.lastName.trim() !== "" &&
     formData.category.trim() !== "";
 
-  const categories = [
-    { id: 1, label: "Admin", icon: "👑" },
-    { id: 2, label: "Teacher", icon: "📚" },
-    { id: 3, label: "Student", icon: "🎓" },
-  ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("New user:", formData);
-    onOpenChange(false);
+    try {
+      await api.createUser(formData);
+      onOpenChange(false);
+      setFormData({ first_name: "", last_name: "", category: "Student" });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -128,26 +128,18 @@ export function NewUserDialog({
               <Users className="h-4 w-4" />
               Category *
             </label>
-            <Select
+            <select
+            title="options"
               value={formData.category}
-              onValueChange={(value: string) =>
-                setFormData({ ...formData, category: value })
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
               }
+              className="w-full p-2 rounded bg-slate-800 text-white border border-slate-700"
             >
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, category: cat.label })
-                  }
-                  className="w-full px-4 py-3 text-left hover:bg-white/10 rounded-xl text-white flex items-center gap-3 transition-all"
-                >
-                  <span className="text-lg">{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </button>
-              ))}
-            </Select>
+              <option value="Admin">Admin</option>
+              <option value="Teacher">Teacher</option>
+              <option value="Student">Student</option>
+            </select>
           </div>
         </div>
 

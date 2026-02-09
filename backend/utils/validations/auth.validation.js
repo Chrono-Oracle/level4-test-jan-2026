@@ -4,8 +4,11 @@ const Validation = require('./index');
 const userValidation = (req,  res, next) => {
 
     const schema = z.object({
-        first_name: z.string().min(3),
-        last_name: z.string().min(3)
+        first_name: z.string().min(3, "First name must be at least 3 characters long"),
+        last_name: z.string().min(3, "Last name must be at least 3 characters long"),
+        category: z.enum(['Admin', 'Teacher', 'Student'], {
+            errorMap: () => ({ message: "Category must be Admin, Teacher, or Student" })
+        })
     })
 
     const valid = Validation(schema, req.body);
