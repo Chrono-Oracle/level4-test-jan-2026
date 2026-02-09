@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const authController = require('./src/controller/auth.controller')
 const { userValidation, contactValidation } = require('./utils/validations/auth.validation')
@@ -12,6 +13,7 @@ mongoose.connect(process.env.DATABASE_URL)
         const PORT = process.env.PORT;
         const app = express();
 
+        app.use(cors());
         app.use(express.json());
 
         //Create a User

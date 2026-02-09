@@ -50,11 +50,11 @@ export default function Dashboard() {
   }, []);
 
   const handleContactCreated = (contact: Contact) => {
-    setContacts(prev => [contact, ...prev]);
+    setContacts((prev) => [contact, ...prev]);
     setIsNewContactOpen(false);
   };
 
-   const handleEdit = (contact: Contact) => {
+  const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
     setIsEditContactOpen(true);
   };
@@ -73,7 +73,6 @@ export default function Dashboard() {
     setIsEditContactOpen(false);
   };
 
-
   const handleDelete = async () => {
     if (!deletingContactId) return;
     try {
@@ -85,7 +84,6 @@ export default function Dashboard() {
     setIsDeleteConfirmOpen(false);
     setDeletingContactId(null);
   };
-
 
   if (loading) {
     return (
@@ -252,6 +250,7 @@ export default function Dashboard() {
       <NewUserDialog open={isNewUserOpen} onOpenChange={setIsNewUserOpen} />
 
       <EditContactDialog
+        key={editingContact?._id || "new"}
         open={isEditContactOpen}
         onOpenChange={setIsEditContactOpen}
         contact={editingContact}

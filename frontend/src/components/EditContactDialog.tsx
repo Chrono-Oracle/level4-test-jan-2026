@@ -14,6 +14,12 @@ type FormData = {
   addedBy: string;
 };
 
+interface SelectUser {
+  id: number;
+  name: string;
+  category: string;
+}
+
 interface SelectProps {
   children: React.ReactNode;
   value: string;
@@ -80,16 +86,6 @@ export function EditContactDialog({
     addedBy: "",
   });
 
-  useEffect(() => {
-    if (contact) {
-      setFormData({
-        fullName: contact.fullname || "",
-        phone: contact.phone?.toString() || "",
-        email: contact.email || "",
-        addedBy: "", // Adjust if your global type eventually includes this
-      });
-    }
-  }, [contact]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +103,10 @@ export function EditContactDialog({
 
   const [isSelectOpen, setIsSelectOpen] = useState(false);
 
+  const users: SelectUser[] = [
+    { id: 1, name: "Admin User", category: "Admin" },
+    { id: 2, name: "Daniel Oracle", category: "Teacher" },
+  ];
 
   if (!open || !contact) return null;
 
@@ -199,7 +199,7 @@ export function EditContactDialog({
                   animate={{ opacity: 1, scale: 1 }}
                   className="absolute z-10 w-full mt-1 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-h-60 overflow-auto"
                 >
-                  {users.map((user) => (
+                  {users.map((user: SelectUser) => (
                     <button
                       key={user.id}
                       type="button"
@@ -207,7 +207,7 @@ export function EditContactDialog({
                         setFormData({ ...formData, addedBy: user.name });
                         setIsSelectOpen(false);
                       }}
-                      className="w-full px-4 py-3  hover:bg-white/10 rounded-xl text-white flex items-center gap-3 transition-all"
+                      className="w-full px-4 py-3 hover:bg-white/10 rounded-xl text-white flex items-center gap-3 transition-all"
                     >
                       <span className="w-2 h-2 bg-indigo-400 rounded-full" />
                       <span>{user.name}</span>
