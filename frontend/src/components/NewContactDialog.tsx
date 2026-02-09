@@ -57,9 +57,11 @@ function Select({
 export function NewContactDialog({
   open,
   onOpenChange,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated: (contact: Contact) => void;
 }) {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -81,9 +83,15 @@ export function NewContactDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
-    console.log("New contact:", formData);
-    onOpenChange(false);
+    if (contact) {
+      const updatedContact: Contact = {
+        ...contact,
+        fullname: formData.fullName, // Use 'fullname' instead of 'name'
+        phone: Number(formData.phone), // The global type expects a number
+      };
+      onSave(updatedContact);
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -184,8 +192,8 @@ export function NewContactDialog({
             type="submit"
             className={`flex-1 py-2 ${
               !isFormValid
-                ? "text-white/30 cursor-not-allowed bg-black/30" 
-                : "text-white bg-green-500" 
+                ? "text-white/30 cursor-not-allowed bg-black/30"
+                : "text-white bg-green-500"
             }`}
             disabled={!isFormValid}
           >

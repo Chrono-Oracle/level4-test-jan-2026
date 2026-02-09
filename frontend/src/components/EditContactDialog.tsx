@@ -3,18 +3,10 @@ import { CustomDialog } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, Save } from "lucide-react";
+import { Contact } from "@/types";
 
-// ✅ PROPER Contact type (same as Dashboard)
-type Contact = {
-  id: number;
-  name: string;
-  phone: string;
-  addedBy: string;
-};
-
-// ✅ PROPER FormData type
 type FormData = {
   fullName: string;
   phone: string;
@@ -22,7 +14,6 @@ type FormData = {
   addedBy: string;
 };
 
-// ✅ FIXED Select with proper props
 interface SelectProps {
   children: React.ReactNode;
   value: string;
@@ -69,7 +60,6 @@ function Select({ children, value, className }: SelectProps) {
   );
 }
 
-
 interface EditContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,38 +74,49 @@ export function EditContactDialog({
   onSave,
 }: EditContactDialogProps) {
   const [formData, setFormData] = useState<FormData>({
-    fullName: contact?.name || "",
-    phone: contact?.phone || "",
+    fullName: "",
+    phone: "",
     email: "",
-    addedBy: contact?.addedBy || "",
+    addedBy: "",
   });
 
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
-
-  const users = [
-    { id: 1, name: "Admin User", category: "Admin" },
-    { id: 2, name: "Daniel Oracle", category: "Teacher" },
-  ];
+  useEffect(() => {
+    if (contact) {
+      setFormData({
+        fullName: contact.fullname || "",
+        phone: contact.phone?.toString() || "",
+        email: contact.email || "",
+        addedBy: "", // Adjust if your global type eventually includes this
+      });
+    }
+  }, [contact]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (contact) {
       const updatedContact: Contact = {
         ...contact,
-        name: formData.fullName,
-        phone: formData.phone,
-        addedBy: formData.addedBy,
+        fullname: formData.fullName,
+        phone: Number(formData.phone),
+        email: formData.email,
       };
       onSave(updatedContact);
       onOpenChange(false);
     }
   };
 
-  // ✅ Don't render if no contact selected
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+
+
   if (!open || !contact) return null;
 
   return (
-    <CustomDialog title="Edit Contact" contentClassName="w-120" open={open} onOpenChange={onOpenChange}>
+    <CustomDialog
+      title="Edit Contact"
+      contentClassName="w-120"
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>

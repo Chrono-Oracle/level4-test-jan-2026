@@ -11,6 +11,7 @@ export type Contact = {
   fullname: string;
   phone: number;
   email: string;
+  addedBy: string;
   createdAt?: string;
   updatedAt?: string;
 };
