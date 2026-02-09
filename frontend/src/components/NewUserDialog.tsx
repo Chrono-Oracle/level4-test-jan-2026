@@ -5,6 +5,8 @@ import { Input } from "./ui/input";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { User, Users } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 function Select({
   children,
@@ -23,7 +25,7 @@ function Select({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-left text-white hover:border-indigo-500 transition-all ${className || ""}`}
+        className={`flex items-center justify-between w-full px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl text-left text-white hover:border-indigo-500 transition-all cursor-pointer ${className || ""}`}
       >
         <span className="block truncate">{value || "Select category..."}</span>
         <svg
@@ -67,20 +69,40 @@ export function NewUserDialog({
     category: "Student",
   });
 
+  const getArticle = (word: string) => {
+    const vowels = ["A", "E", "I", "O", "U"];
+    return vowels.includes(word.charAt(0).toUpperCase()) ? "an" : "a";
+  };
+
   const isFormValid =
     formData.firstName.trim() !== "" &&
     formData.lastName.trim() !== "" &&
     formData.category.trim() !== "";
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.createUser(formData);
+      await api.createUser({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        category: formData.category,
+      });
+
+      toast.success("User created successfully!", {
+        description: `${formData.firstName} ${formData.lastName} has been added as ${getArticle(formData.category)} ${formData.category}.`,
+      });
+
       onOpenChange(false);
-      setFormData({ first_name: "", last_name: "", category: "Student" });
+
+      setFormData({ firstName: "", lastName: "", category: "Student" });
     } catch (err) {
       console.error(err);
+
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+
+      toast.error("Failed to create user", {
+          description: errorMessage,
+        });
     }
   };
 
@@ -128,18 +150,27 @@ export function NewUserDialog({
               <Users className="h-4 w-4" />
               Category *
             </label>
-            <select
-            title="options"
+            <Select
               value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
+              onValueChange={(val) =>
+                setFormData({ ...formData, category: val })
               }
-              className="w-full p-2 rounded bg-slate-800 text-white border border-slate-700"
             >
-              <option value="Admin">Admin</option>
-              <option value="Teacher">Teacher</option>
-              <option value="Student">Student</option>
-            </select>
+              {["Admin", "Teacher", "Student"].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, category: cat });
+                    // Note: You might need to manage the 'open' state of Select if
+                    // you want it to close automatically on click.
+                  }}
+                  className="w-full px-4 py-3 text-left text-white hover:bg-green-400 cursor-pointer transition-colors border-b border-white/5 last:border-none"
+                >
+                  {cat}
+                </button>
+              ))}
+            </Select>
           </div>
         </div>
 
@@ -156,7 +187,7 @@ export function NewUserDialog({
             className={`flex-1 py-2 ${
               !isFormValid
                 ? "text-white/30 cursor-not-allowed bg-black/30"
-                : "text-white bg-green-500"
+                : "text-white bg-green-500 cursor-pointer"
             }`}
             disabled={!isFormValid}
           >
