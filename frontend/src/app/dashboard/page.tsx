@@ -54,6 +54,13 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  const getUserCategory = (userName: string) => {
+    const user = users.find(
+      (u) => `${u.first_name} ${u.last_name}` === userName,
+    );
+    return user?.category || userName; // Fallback to name if not found
+  };
+
   const formatPhoneNumber = (phone: string | number) => {
     const s = String(phone).replace(/\D/g, "");
     // Assuming the raw string is something like "237687456814"
@@ -210,11 +217,17 @@ export default function Dashboard() {
                       {contact._id.slice(-8)}
                     </td>
                     <td className="py-4 font-semibold">{contact.fullname}</td>
-                    <td className="py-4 text-slate-400">{contact.phone}</td>
+                    <td className="py-4 text-slate-400">
+                      {formatPhoneNumber(contact.phone)}
+                    </td>
                     <td className="py-4 text-slate-400">{contact.email}</td>
                     <td className="py-4">
                       <span className="inline-flex items-center gap-2 bg-green-300/20 text-green-400 px-3 py-1 rounded-full text-sm">
-                        {contact.addedBy}
+                        {users.find(
+                          (u) =>
+                            `${u.first_name} ${u.last_name}` ===
+                            contact.addedBy,
+                        )?.category || contact.addedBy}
                       </span>
                     </td>
                     <td className="py-4">

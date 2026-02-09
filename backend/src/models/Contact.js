@@ -20,6 +20,10 @@ const contactSchema  = new Schema({
         min: [3, "Please enter valid name ( > 3)"],
         max: [50, "Please enter valid name ( < 50)"],
     },
+    addedBy: {
+        type: String,
+        required: true,
+    }
 }, { timestamps: true });
 
 const Contact = model('contact', contactSchema);

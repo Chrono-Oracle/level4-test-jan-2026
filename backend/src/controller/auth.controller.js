@@ -42,14 +42,21 @@ const add = async (req, res) => {
     const formattedFullname = formatName(data.fullname);
     const phone = data.phone;
     const email = data.email;
-    const find = await Contact.findOne({ $or: [{ phone }, { email }, { fullname: formattedFullname }]});
+    const addedBy = data.addedBy;
+    const find = await Contact.findOne({ $or: [{ phone }, { email }] });
     if (find) {
       return res.status(404).json({
         message: "Contact already exists",
       });
     }
 
-    const newContact = await Contact.create({ ...data, fullname: formattedFullname phone, email });
+    const newContact = await Contact.create({
+      ...data,
+      fullname: formattedFullname,
+      phone,
+      email,
+      addedBy,
+    });
     return res.status(201).json(newContact);
   } catch (err) {
     console.log("Error creating contact:", err);

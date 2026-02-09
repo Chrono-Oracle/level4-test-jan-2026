@@ -26,7 +26,8 @@ const contactValidation = ( req, res, next ) => {
     const schema = z.object({
         fullname: z.string().min(5),
         phone: z.string().min(9),
-        email: z.email()
+        email: z.email().optional().or(z.literal('')),
+        addedBy: z.string().min(3, "Whose adding this contact?")
     })
 
     const valid = Validation(schema, req.body);
